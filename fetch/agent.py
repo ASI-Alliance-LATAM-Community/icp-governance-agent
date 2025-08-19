@@ -10,31 +10,35 @@ from uagents_core.contrib.protocols.chat import (
 from uagents import Agent, Context, Protocol
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ASI1 API settings
-# Create yours at: https://asi1.ai/dashboard/api-keys
-ASI1_API_KEY = "sk_a9a67513453a42809c9929dee0babd29f2e709ba51444f8cb2fd0ed3bf114bbb" # your_asi1_api_key" # Replace with your ASI1 key
+ASI1_API_KEY = os.getenv("ASI1_API_KEY")
+
+if not ASI1_API_KEY:
+    raise RuntimeError("ASI1_API_KEY not set. Add it to your environment or .env")
+
 ASI1_BASE_URL = "https://api.asi1.ai/v1"
 ASI1_HEADERS = {
     "Authorization": f"Bearer {ASI1_API_KEY}",
     "Content-Type": "application/json"
 }
 
-CANISTER_ID = "uxrrr-q7777-77774-qaaaq-cai"
-BASE_URL = "http://127.0.0.1:4943"
+BASE_URL = "https://ic-api.internetcomputer.org/api/v3"
 
 HEADERS = {
-    "Host": f"{CANISTER_ID}.localhost",
     "Content-Type": "application/json"
 }
 
-# Function definitions for ASI1 function calling
 tools = [
     {
         "type": "function",
         "function": {
-            "name": "get_current_fee_percentiles",
-            "description": "Gets the 100 fee percentiles measured in millisatoshi/byte.",
+            "name": "governance_total_locked_e8s",
+            "description": "Gets the total amount of e8s locked in ICP governance.",
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -44,56 +48,14 @@ tools = [
             "strict": True
         }
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_balance",
-            "description": "Returns the balance of a given Bitcoin address.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "address": {
-                        "type": "string",
-                        "description": "The Bitcoin address to check."
-                    }
-                },
-                "required": ["address"],
-                "additionalProperties": False
-            },
-            "strict": True
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_utxos",
-            "description": "Returns the UTXOs of a given Bitcoin address.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "address": {
-                        "type": "string",
-                        "description": "The Bitcoin address to fetch UTXOs for."
-                    }
-                },
-                "required": ["address"],
-                "additionalProperties": False
-            },
-            "strict": True
-        }
-    },    
 ]
 
 async def call_icp_endpoint(func_name: str, args: dict):
-    if func_name == "get_current_fee_percentiles":
-        url = f"{BASE_URL}/get-current-fee-percentiles"
-        response = requests.post(url, headers=HEADERS, json={})
-    elif func_name == "get_balance":
-        url = f"{BASE_URL}/get-balance"
-        response = requests.post(url, headers=HEADERS, json={"address": args["address"]})
-    elif func_name == "get_utxos":
-        url = f"{BASE_URL}/get-utxos"
-        response = requests.post(url, headers=HEADERS, json={"address": args["address"]})    
+    if func_name == "governance_total_locked_e8s":
+        url = f"{BASE_URL}/governance-metrics/governance_total_locked_e8s"
+        response = requests.get(url, headers={
+            "Content-Type": "application/json"
+        })
     else:
         raise ValueError(f"Unsupported function call: {func_name}")
     response.raise_for_status()
@@ -126,7 +88,7 @@ async def process_query(query: str, ctx: Context) -> str:
         messages_history = [initial_message, response_json["choices"][0]["message"]]
 
         if not tool_calls:
-            return "I couldn't determine what Bitcoin information you're looking for. Please try rephrasing your question."
+            return "I couldn't determine what ICP Governance information you're looking for. Please try rephrasing your question."
 
         # Step 3: Execute tools and format results
         for tool_call in tool_calls:
@@ -176,7 +138,7 @@ async def process_query(query: str, ctx: Context) -> str:
         return f"An error occurred while processing your request: {str(e)}"
 
 agent = Agent(
-    name='test-ICP-agent',
+    name='ICP-governance-agent',
     port=8001,
     mailbox=True
 )
@@ -226,34 +188,3 @@ agent.include(chat_proto)
 
 if __name__ == "__main__":
     agent.run()
-
-
-"""
-Queries for /get-balance
-What's the balance of address bc1q8sxznvhualuyyes0ded7kgt33876phpjhp29rs?
-
-Can you check how many bitcoins are in bc1q8sxznvhualuyyes0ded7kgt33876phpjhp29rs?
-
-Show me the balance of this Bitcoin wallet: bc1q8sxznvhualuyyes0ded7kgt33876phpjhp29rs.
-
-🧾 Queries for /get-utxos
-What UTXOs are available for address bc1q8sxznvhualuyyes0ded7kgt33876phpjhp29rs?
-
-List unspent outputs for bc1q8sxznvhualuyyes0ded7kgt33876phpjhp29rs.
-
-Do I have any unspent transactions for bc1q8sxznvhualuyyes0ded7kgt33876phpjhp29rs?
-
-🧾 Queries for /get-current-fee-percentiles
-What are the current Bitcoin fee percentiles?
-
-Show me the latest fee percentile distribution.
-
-How much are the Bitcoin network fees right now?
-
-🧾 Queries for /get-p2pkh-address
-What is my canister's P2PKH address?
-
-Generate a Bitcoin address for me.
-
-Give me a Bitcoin address I can use to receive coins.
-"""
