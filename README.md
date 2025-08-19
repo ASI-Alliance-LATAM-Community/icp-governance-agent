@@ -11,18 +11,14 @@
 <h3 align="center">NNS Metrics, Proposals & On-chain State.</h3>
 <p align="center">An intelligent agent focused on ICP governance, providing real-time information on proposals, metrics, and more!</p>
 
----
+## Agent details
+
+- **Address:** `agent1q0cws9lqyazjhmcth2u4keuk7mhpptg5fvh7wvrkz8j98ls05ftrwgcwc5a`
 
 ## ✨ Features
 
-* **Ready-to-use HTTP tools (NNS & Governance API)**
-
-  * `/api/v3/icp-usd-rate`
-  * `/api/v3/metrics/governance-neurons-total`
-  * `/api/v3/metrics/governance-voting-power-total`
-  * `/api/v3/metrics/governance_not_dissolving_neurons_e8s_1year`
-  * `/api/v3/proposals` (+ rich filters)
-  * `/api/v3/proposals-count`, `/latest-proposal-id`, `/proposals-over-past-7d`
+- Governance and Proposal Queries
+- ICP/USD Price
 
 ---
 
