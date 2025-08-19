@@ -37,8 +37,160 @@ tools = [
     {
         "type": "function",
         "function": {
+            "name": "get_governance_metrics",
+            "description": "Fetch Internet Computer governance metrics from ic-api.internetcomputer.org (no parameters).",
+            "parameters": { 
+                "type": "object", 
+                "properties": {},
+                "required": [],
+                "additionalProperties": False
+            },
+            "strict": True
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "governance_total_locked_e8s",
             "description": "Gets the total amount of e8s locked in ICP governance.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": False
+            },
+            "strict": True
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_icp_usd_rate",
+            "description": "Fetch the latest ICP/USD rate from Internet Computer API.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": False
+            },
+            "strict": True
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_governance_neurons_total",
+            "description": "Fetch time-series of total governance neurons from Internet Computer API.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": False
+            },
+            "strict": True
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_governance_voting_power_total",
+            "description": "Fetch time-series of total governance voting power from the Internet Computer API.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": False
+            },
+            "strict": True
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_ic_proposals",
+            "description": "List NNS proposals with optional filters (topic, status, action, etc.) and pagination.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "offset": { "type": "integer", "minimum": 0, "description": "Pagination offset (default 0)" },
+                    "limit":  { "type": "integer", "minimum": 50, "maximum": 100, "description": "Items per page (default 50)" },
+                    "max_proposal_index": { "type": "integer", "description": "Return proposals with index <= this value (page backwards)" },
+                    "include_reward_status": {
+                        "type": "array",
+                        "items": { "type": "string", "enum": ["UNSPECIFIED","ACCEPT_VOTES","READY_TO_SETTLE","SETTLED","INELIGIBLE"] }
+                    },
+                    "include_topic": {
+                        "type": "array",
+                        "items": { "type": "string", "enum": [
+                        "TOPIC_UNSPECIFIED","TOPIC_NEURON_MANAGEMENT","TOPIC_EXCHANGE_RATE","TOPIC_NETWORK_ECONOMICS",
+                        "TOPIC_GOVERNANCE","TOPIC_NODE_ADMIN","TOPIC_PARTICIPANT_MANAGEMENT","TOPIC_SUBNET_MANAGEMENT",
+                        "TOPIC_NETWORK_CANISTER_MANAGEMENT","TOPIC_KYC","TOPIC_NODE_PROVIDER_REWARDS",
+                        "TOPIC_SNS_DECENTRALIZATION_SALE","TOPIC_IC_OS_VERSION_DEPLOYMENT","TOPIC_IC_OS_VERSION_ELECTION",
+                        "TOPIC_SNS_AND_COMMUNITY_FUND","TOPIC_API_BOUNDARY_NODE_MANAGEMENT","TOPIC_SUBNET_RENTAL",
+                        "TOPIC_PROTOCOL_CANISTER_MANAGEMENT","TOPIC_SERVICE_NERVOUS_SYSTEM_MANAGEMENT",
+                        "TOPIC_SYSTEM_CANISTER_MANAGEMENT","TOPIC_APPLICATION_CANISTER_MANAGEMENT"
+                        ] }
+                    },
+                    "include_status": {
+                        "type": "array",
+                        "items": { "type": "string", "enum": ["UNKNOWN","UNSPECIFIED","OPEN","REJECTED","ADOPTED","EXECUTED","FAILED"] }
+                    },
+                    "include_action": {
+                        "type": "array",
+                        "items": { "type": "string", "enum": [
+                        "ApproveGenesisKyc","AddOrRemoveNodeProvider","CreateServiceNervousSystem","ExecuteNnsFunction",
+                        "FulfillSubnetRentalRequest","InstallCode","ManageNeuron","ManageNetworkEconomics","Motion",
+                        "OpenSnsTokenSwap","RegisterKnownNeuron","RewardNodeProvider","RewardNodeProviders",
+                        "SetDefaultFollowees","SetSnsTokenSwapOpenTimeWindow","StopOrStartCanister","UpdateCanisterSettings"
+                        ] }
+                    },
+                    "include_action_nns_function": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "NNS function names to include (use values shown by the API UI)."
+                    },
+                    "manage_neuron_id": { "type": "integer" },
+                    "proposer": { "type": "integer" }
+                    },
+                "required": [],
+                "additionalProperties": False
+            },
+            "strict": True
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_ic_proposals_count",
+            "description": "Get the total number of Internet Computer governance proposals.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": False
+            },
+            "strict": True
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_ic_latest_proposal_id",
+            "description": "Get the latest Internet Computer governance proposal ID. This is useful for fetching the most recent proposal details.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": False
+            },
+            "strict": True
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_ic_proposals_over_past_7d",
+            "description": "Get the number of IC governance proposals over the past 7 days and the delta vs the previous 7 days.",
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -51,8 +203,48 @@ tools = [
 ]
 
 async def call_icp_endpoint(func_name: str, args: dict):
-    if func_name == "governance_total_locked_e8s":
+    if func_name == "get_governance_metrics":
+        url = f"{BASE_URL}/governance-metrics"
+        response = requests.get(url, headers={
+            "Content-Type": "application/json"
+        })
+    elif func_name == "governance_total_locked_e8s":
         url = f"{BASE_URL}/governance-metrics/governance_total_locked_e8s"
+        response = requests.get(url, headers={
+            "Content-Type": "application/json"
+        })
+    elif func_name == "get_icp_usd_rate":
+        url = f"{BASE_URL}/icp-usd-rate"
+        response = requests.get(url, headers={
+            "Content-Type": "application/json"
+        })
+    elif func_name == "get_governance_neurons_total":
+        url = f"{BASE_URL}/metrics/governance-neurons-total"
+        response = requests.get(url, headers={
+            "Content-Type": "application/json"
+        })
+    elif func_name == "get_governance_voting_power_total":
+        url = f"{BASE_URL}/metrics/governance-voting-power-total"
+        response = requests.get(url, headers={
+            "Content-Type": "application/json"
+        })
+    elif func_name == "get_ic_proposals":
+        url = f"{BASE_URL}/proposals?offset=0&limit=50&format=json"
+        response = requests.get(url, headers={
+            "Content-Type": "application/json"
+        })
+    elif func_name == "get_ic_proposals_count":
+        url = f"{BASE_URL}/proposals-count"
+        response = requests.get(url, headers={
+            "Content-Type": "application/json"
+        })
+    elif func_name == "get_ic_latest_proposal_id":
+        url = f"{BASE_URL}/latest-proposal-id"
+        response = requests.get(url, headers={
+            "Content-Type": "application/json"
+        })
+    elif func_name == "get_ic_proposals_over_past_7d":
+        url = f"{BASE_URL}/proposals-over-past-7d"
         response = requests.get(url, headers={
             "Content-Type": "application/json"
         })
@@ -188,3 +380,8 @@ agent.include(chat_proto)
 
 if __name__ == "__main__":
     agent.run()
+    
+    
+# GET /api/v3/governance-metrics/{name}
+# GET /api/v3/proposals/{proposal_id}
+# <tool_call> {"name": "get_ic_proposal_info", "arguments": {"proposal_id": 138051}} </tool_call>
