@@ -1,8 +1,9 @@
 {
+  "version": 1,
   "canisters": {
     "backend": {
-      "main": "src/backend/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "main": "src/backend/main.mo"
     }
   },
   "defaults": {
@@ -11,6 +12,8 @@
       "packtool": "mops sources"
     }
   },
-  "output_env_file": ".env",
-  "version": 1
+  "networks": {
+    "local": { "bind": "127.0.0.1:4943", "type": "ephemeral" },
+    "ic":    { "type": "persistent", "providers": ["https://ic0.app"] }
+  }
 }

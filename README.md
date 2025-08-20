@@ -28,6 +28,11 @@
 .
 └── fetch/
     └── agent.py
+    ic/
+    └── src/
+        └── backend/
+            └── main.mo
+            └── canister.did
 ```
 
 ## 🧰 API Cheat Sheet
