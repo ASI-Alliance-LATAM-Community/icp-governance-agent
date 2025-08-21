@@ -15,6 +15,7 @@ from ic.client import Client
 from ic.identity import Identity
 from ic.agent import Agent as IcAgent
 from ic.candid import Types, encode
+from urllib.parse import urlencode
 
 from tools import TOOLS as tools
 from dotenv import load_dotenv
@@ -141,7 +142,7 @@ def validate_canister_response(response: dict) -> bool:
     return all(field in response for field in required_fields)
 
 
-async def call_icp_endpoint(func_name: str, args: dict):
+async def call_icp_endpoint(func_name: str, args: dict, ctx: Context):
     if func_name == "get_governance_metrics":
         url = f"{BASE_URL}/governance-metrics"
         response = requests.get(url, headers={"Content-Type": "application/json"})
@@ -158,7 +159,22 @@ async def call_icp_endpoint(func_name: str, args: dict):
         url = f"{BASE_URL}/metrics/governance-voting-power-total"
         response = requests.get(url, headers={"Content-Type": "application/json"})
     elif func_name == "get_ic_proposals":
-        url = f"{BASE_URL}/proposals?offset=0&limit=50&format=json"
+        query_args = []
+        for key, value in args.items():
+            if isinstance(value, list):
+                for item in value:
+                    query_args.append((key, item))
+            else:
+                query_args.append((key, value))
+
+        query_args.append(("format", "json"))
+        query_args.append(("offset", args.get("offset", 0)))
+        query_args.append(("limit", args.get("limit", 10)))
+
+        query_string = urlencode(query_args)
+        url = f"{BASE_URL}/proposals?{query_string}"
+
+        ctx.logger.info(f"Fetching proposals with URL: {url}")
         response = requests.get(url, headers={"Content-Type": "application/json"})
     elif func_name == "get_ic_proposals_count":
         url = f"{BASE_URL}/proposals-count"
@@ -186,7 +202,7 @@ async def process_query(query: str, ctx: Context) -> str:
             "messages": [initial_message],
             "tools": tools,
             "temperature": 0.7,
-            "max_tokens": 2048,
+            "max_tokens": 4096,
         }
 
         resp = requests.post(
@@ -202,7 +218,7 @@ async def process_query(query: str, ctx: Context) -> str:
         messages_history = [initial_message, model_msg]
 
         if not tool_calls:
-            return "No matching tool function found."
+            return "Sorry, I couldn't find any action to execute for your query. Please, try again or adjust your question."
 
         for tool_call in tool_calls:
             func_name = tool_call["function"]["name"]
@@ -211,9 +227,12 @@ async def process_query(query: str, ctx: Context) -> str:
 
             try:
                 if func_name in CANISTER_TOOL_NAMES:
+                    ctx.logger.info(f"[CALL] Calling CANISTER endpoint: {func_name} with args: {arguments}")
                     result = await call_canister_endpoint(func_name, arguments, ctx)
                 elif func_name in ICP_TOOL_NAMES:
-                    result = await call_icp_endpoint(func_name, arguments)
+                    ctx.logger.info(f"[CALL] Calling ICP endpoint: {func_name} with args: {arguments}")
+                    result = await call_icp_endpoint(func_name, arguments, ctx)
+                    ctx.logger.info(f"[RESULT] {func_name} result: {result}")
                 else:
                     raise ValueError(f"Unsupported tool: {func_name}")
 
@@ -233,7 +252,7 @@ async def process_query(query: str, ctx: Context) -> str:
             "model": "asi1-mini",
             "messages": messages_history,
             "temperature": 0.7,
-            "max_tokens": 2048,
+            "max_tokens": 4096,
         }
         final_response = requests.post(
             f"{ASI1_BASE_URL}/chat/completions",
