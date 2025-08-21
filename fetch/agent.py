@@ -15,8 +15,9 @@ from ic.client import Client
 from ic.identity import Identity
 from ic.agent import Agent as IcAgent
 from ic.candid import Types, encode
+
+from tools import TOOLS as tools
 from dotenv import load_dotenv
-from ic.candid import Types
 
 load_dotenv()
 
@@ -32,317 +33,37 @@ ASI1_HEADERS = {
     "Content-Type": "application/json",
 }
 
+# ICP API settings
 BASE_URL = "https://ic-api.internetcomputer.org/api/v3"
-
 HEADERS = {"Content-Type": "application/json"}
 
 # Canister Settings
 ICP_NETWORK = "local"
 ICP_CANISTER_ID = "uxrrr-q7777-77774-qaaaq-cai"
-DFX_CANISTER_NAME = "backend"
 CANISTER_BASE_URL = "http://127.0.0.1:4943"
 
 iden = Identity()
 client = Client(url=CANISTER_BASE_URL if ICP_NETWORK == "local" else "https://ic0.app")
 ic_agent = IcAgent(iden, client)
 
-CANISTER_HEADERS = {
-    "Host": f"{ICP_CANISTER_ID}.localhost",
-    "Content-Type": "application/cbor",
+CANISTER_TOOL_NAMES = {
+    "add_proposal_id",
+    "remove_proposal_id",
+    "get_proposal_ids",
 }
 
-proposal_id_type = Types.Nat
-proposal_ids_type = Types.Vec(Types.Nat)
-
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_governance_metrics",
-            "description": "Fetch Internet Computer governance metrics from ic-api.internetcomputer.org (no parameters).",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "governance_total_locked_e8s",
-            "description": "Gets the total amount of e8s locked in ICP governance.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_icp_usd_rate",
-            "description": "Fetch the latest ICP/USD rate from Internet Computer API.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_governance_neurons_total",
-            "description": "Fetch time-series of total governance neurons from Internet Computer API.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_governance_voting_power_total",
-            "description": "Fetch time-series of total governance voting power from the Internet Computer API.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_ic_proposals",
-            "description": "List NNS proposals with optional filters (topic, status, action, etc.) and pagination.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "offset": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "description": "Pagination offset (default 0)",
-                    },
-                    "limit": {
-                        "type": "integer",
-                        "minimum": 50,
-                        "maximum": 100,
-                        "description": "Items per page (default 50)",
-                    },
-                    "max_proposal_index": {
-                        "type": "integer",
-                        "description": "Return proposals with index <= this value (page backwards)",
-                    },
-                    "include_reward_status": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "UNSPECIFIED",
-                                "ACCEPT_VOTES",
-                                "READY_TO_SETTLE",
-                                "SETTLED",
-                                "INELIGIBLE",
-                            ],
-                        },
-                    },
-                    "include_topic": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "TOPIC_UNSPECIFIED",
-                                "TOPIC_NEURON_MANAGEMENT",
-                                "TOPIC_EXCHANGE_RATE",
-                                "TOPIC_NETWORK_ECONOMICS",
-                                "TOPIC_GOVERNANCE",
-                                "TOPIC_NODE_ADMIN",
-                                "TOPIC_PARTICIPANT_MANAGEMENT",
-                                "TOPIC_SUBNET_MANAGEMENT",
-                                "TOPIC_NETWORK_CANISTER_MANAGEMENT",
-                                "TOPIC_KYC",
-                                "TOPIC_NODE_PROVIDER_REWARDS",
-                                "TOPIC_SNS_DECENTRALIZATION_SALE",
-                                "TOPIC_IC_OS_VERSION_DEPLOYMENT",
-                                "TOPIC_IC_OS_VERSION_ELECTION",
-                                "TOPIC_SNS_AND_COMMUNITY_FUND",
-                                "TOPIC_API_BOUNDARY_NODE_MANAGEMENT",
-                                "TOPIC_SUBNET_RENTAL",
-                                "TOPIC_PROTOCOL_CANISTER_MANAGEMENT",
-                                "TOPIC_SERVICE_NERVOUS_SYSTEM_MANAGEMENT",
-                                "TOPIC_SYSTEM_CANISTER_MANAGEMENT",
-                                "TOPIC_APPLICATION_CANISTER_MANAGEMENT",
-                            ],
-                        },
-                    },
-                    "include_status": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "UNKNOWN",
-                                "UNSPECIFIED",
-                                "OPEN",
-                                "REJECTED",
-                                "ADOPTED",
-                                "EXECUTED",
-                                "FAILED",
-                            ],
-                        },
-                    },
-                    "include_action": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "ApproveGenesisKyc",
-                                "AddOrRemoveNodeProvider",
-                                "CreateServiceNervousSystem",
-                                "ExecuteNnsFunction",
-                                "FulfillSubnetRentalRequest",
-                                "InstallCode",
-                                "ManageNeuron",
-                                "ManageNetworkEconomics",
-                                "Motion",
-                                "OpenSnsTokenSwap",
-                                "RegisterKnownNeuron",
-                                "RewardNodeProvider",
-                                "RewardNodeProviders",
-                                "SetDefaultFollowees",
-                                "SetSnsTokenSwapOpenTimeWindow",
-                                "StopOrStartCanister",
-                                "UpdateCanisterSettings",
-                            ],
-                        },
-                    },
-                    "include_action_nns_function": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "NNS function names to include (use values shown by the API UI).",
-                    },
-                    "manage_neuron_id": {"type": "integer"},
-                    "proposer": {"type": "integer"},
-                },
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_ic_proposals_count",
-            "description": "Get the total number of Internet Computer governance proposals.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_ic_latest_proposal_id",
-            "description": "Get the latest Internet Computer governance proposal ID. This is useful for fetching the most recent proposal details.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_ic_proposals_over_past_7d",
-            "description": "Get the number of IC governance proposals over the past 7 days and the delta vs the previous 7 days.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_ic_proposal_info",
-            "description": "Get details of a specific ICP governance proposal by ID.",
-            "parameters": {
-                "type": "object",
-                "properties": {"proposal_id": {"type": "integer"}},
-                "required": ["proposal_id"],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "add_proposal_id",
-            "description": "Store a proposal ID in the user's list",
-            "parameters": {
-                "type": "object",
-                "properties": {"proposal_id": {"type": "integer"}},
-                "required": ["proposal_id"],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "remove_proposal_id",
-            "description": "Remove a proposal ID from the user's list",
-            "parameters": {
-                "type": "object",
-                "properties": {"proposal_id": {"type": "integer"}},
-                "required": ["proposal_id"],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_proposal_ids",
-            "description": "Get the current list of proposal IDs stored by the user",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": False,
-            },
-            "strict": True,
-        },
-    },
-]
+ICP_TOOL_NAMES = {
+    "get_governance_metrics",
+    "governance_total_locked_e8s",
+    "get_icp_usd_rate",
+    "get_governance_neurons_total",
+    "get_governance_voting_power_total",
+    "get_ic_proposals",
+    "get_ic_proposals_count",
+    "get_ic_latest_proposal_id",
+    "get_ic_proposals_over_past_7d",
+    "get_ic_proposal_info",
+}
 
 
 async def call_canister_endpoint(func_name: str, args: dict, ctx: Context):
@@ -467,44 +188,46 @@ async def process_query(query: str, ctx: Context) -> str:
             "temperature": 0.7,
             "max_tokens": 2048,
         }
-        response = requests.post(
+
+        resp = requests.post(
             f"{ASI1_BASE_URL}/chat/completions",
-            headers={
-                "Authorization": f"Bearer {ASI1_API_KEY}",
-                "Content-Type": "application/json",
-            },
+            headers={"Authorization": f"Bearer {ASI1_API_KEY}", "Content-Type": "application/json"},
             json=payload,
         )
-        response.raise_for_status()
-        response_json = response.json()
+        resp.raise_for_status()
+        response_json = resp.json()
 
-        tool_calls = response_json["choices"][0]["message"].get("tool_calls", [])
-        messages_history = [initial_message, response_json["choices"][0]["message"]]
+        model_msg = response_json["choices"][0]["message"]
+        tool_calls = model_msg.get("tool_calls", [])
+        messages_history = [initial_message, model_msg]
 
         if not tool_calls:
             return "No matching tool function found."
 
         for tool_call in tool_calls:
             func_name = tool_call["function"]["name"]
-            arguments = json.loads(tool_call["function"]["arguments"])
+            arguments = json.loads(tool_call["function"]["arguments"] or "{}")
             tool_call_id = tool_call["id"]
 
-        try:
-            result = await call_canister_endpoint(func_name, arguments, ctx)
-            content_to_send = json.dumps(result)
-        except Exception as e:
-            ctx.logger.error(f"Tool execution failed: {str(e)}")
-            content_to_send = json.dumps(
-                {"error": format_error_response(e), "status": "failed"}
-            )
+            try:
+                if func_name in CANISTER_TOOL_NAMES:
+                    result = await call_canister_endpoint(func_name, arguments, ctx)
+                elif func_name in ICP_TOOL_NAMES:
+                    result = await call_icp_endpoint(func_name, arguments)
+                else:
+                    raise ValueError(f"Unsupported tool: {func_name}")
 
-        messages_history.append(
-            {
-                "role": "tool",
-                "tool_call_id": tool_call_id,
-                "content": content_to_send,
-            }
-        )
+                content_to_send = json.dumps(result)
+
+            except Exception as e:
+                ctx.logger.error(f"Tool execution failed for {func_name}: {e}")
+                content_to_send = json.dumps(
+                    {"error": format_error_response(e), "status": "failed", "tool": func_name}
+                )
+
+            messages_history.append(
+                {"role": "tool", "tool_call_id": tool_call_id, "content": content_to_send}
+            )
 
         final_payload = {
             "model": "asi1-mini",
@@ -514,18 +237,15 @@ async def process_query(query: str, ctx: Context) -> str:
         }
         final_response = requests.post(
             f"{ASI1_BASE_URL}/chat/completions",
-            headers={
-                "Authorization": f"Bearer {ASI1_API_KEY}",
-                "Content-Type": "application/json",
-            },
+            headers={"Authorization": f"Bearer {ASI1_API_KEY}", "Content-Type": "application/json"},
             json=final_payload,
         )
         final_response.raise_for_status()
         return final_response.json()["choices"][0]["message"]["content"]
 
     except Exception as e:
-        ctx.logger.error(f"Error processing query: {str(e)}")
-        return f"An error occurred: {str(e)}"
+        ctx.logger.error(f"Error processing query: {e}")
+        return f"An error occurred: {e}"
 
 
 agent = Agent(name="ICP-governance-agent", port=8001, mailbox=True)
