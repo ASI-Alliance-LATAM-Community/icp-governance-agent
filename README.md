@@ -3,21 +3,83 @@
 </p>
 
 <h1 align="center">ICP Governance agent</h1>
+<p align="center">From ASI LATAM Community 🌎</p>
 
 <div align="center">
   <img src="https://img.shields.io/badge/innovationlab-3D8BD3" alt="tag:innovationlab">
 </div>
+
 
 <h3 align="center">NNS Metrics, Proposals & On-chain State.</h3>
 <p align="center">An intelligent agent focused on ICP governance, providing real-time information on proposals, metrics, and more!</p>
 
 ## Agent details
 
+- **name**: ICP-Governance-agent
 - **Address:** `agent1q0cws9lqyazjhmcth2u4keuk7mhpptg5fvh7wvrkz8j98ls05ftrwgcwc5a`
+
+
+## 🚀 Getting Started (Local)
+
+### 1) Clone the repository
+
+```bash
+git clone https://github.com/ASI-Alliance-LATAM-Community/icp-governance-agent.git
+
+cd icp-governance-agent
+```
+
+### 2) Start the local replica and deploy the canister
+
+```bash
+dfx start --clean --background
+
+dfx deploy
+```
+
+After deployment, grab your canister ID:
+
+```bash
+dfx canister id backend
+```
+
+Copy the printed canister **ID** and paste it into `fetch/agent.py` for `ICP_CANISTER_ID` (near the “Canister Settings” section).
+
+### 3) Set up the agent environment
+
+```bash
+cd fetch/
+
+python3 -m venv .venv
+
+source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt
+```
+
+Create a `.env` file in `fetch/` and add your ASI1 API key:
+
+```
+ASI1_API_KEY=your_api_key_here
+```
+
+### 4) Run the agent
+
+```bash
+python3 agent.py
+```
+
+Tip: When you’re done, stop the local replica with:
+
+```bash
+dfx stop
+```
+
 
 ## ✨ Features
 
 - Governance and Proposal Queries
+- Storage proposals IDs to track in the future
 - ICP/USD Price
 
 ---
@@ -29,13 +91,10 @@
 └── fetch/
     └── agent.py
     ic/
-    └── src/
-        └── backend/
-            └── main.mo
-            └── canister.did
+    └── main.mo
 ```
 
-## 🧰 API Cheat Sheet
+## 🧰 ICP API Cheat Sheet
 
 | Endpoint                                               | Purpose                   |
 | ------------------------------------------------------ | ------------------------- |
@@ -79,19 +138,11 @@ Use natural language—**ICP Governance agent** will map these to the right NNS 
 * Plot the **voting power** time series with **step=7200** over the **last 24 hours**.
 * From **start=<ts> to end=<ts>**, chart **total neurons** with a 2-hour step.
 
-### My on-chain prefs (canister)
+### Proposal ID management:
 
-* **Set my preferred filters** to topic Governance and status OPEN.
-* **Remember** that I last saw proposal **138051**.
-* What’s my **current stored state** (prefs, last seen proposal, webhook)?
-* **Set a webhook** to `https://example.com/webhook` for new proposals.
-* **Clear my webhook** and keep the filters.
-
-### Automation loop prompts
-
-* Check if there are **new proposals since my last seen** and then **update** my last seen ID.
-* Fetch only **proposals newer than 138000** and **summarize by topic**.
-* Compare **this week’s proposal count vs last week** and give me the delta.
+- Add proposal ID 123
+- Remove proposal ID 123
+- Get my proposal IDs → [1001, 2045, 3077]
 
 
 ## 📄 License

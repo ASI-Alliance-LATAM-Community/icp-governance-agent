@@ -1,0 +1,5 @@
+requests
+python-dotenv
+uagents
+uagents-core
+ic-py

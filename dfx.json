@@ -3,7 +3,7 @@
   "canisters": {
     "backend": {
       "type": "motoko",
-      "main": "src/backend/main.mo"
+      "main": "ic/main.mo"
     }
   },
   "defaults": {
@@ -13,7 +13,13 @@
     }
   },
   "networks": {
-    "local": { "bind": "127.0.0.1:4943", "type": "ephemeral" },
-    "ic":    { "type": "persistent", "providers": ["https://ic0.app"] }
+    "local": {
+      "bind": "127.0.0.1:4943",
+      "type": "ephemeral"
+    },
+    "ic": {
+      "type": "persistent",
+      "providers": ["https://ic0.app"]
+    }
   }
 }
