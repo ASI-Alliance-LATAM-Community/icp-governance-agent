@@ -13,6 +13,8 @@
 <h3 align="center">NNS Metrics, Proposals & On-chain State.</h3>
 <p align="center">An intelligent agent focused on ICP governance, providing real-time information on proposals, metrics, and more!</p>
 
+![icp-governance-agent diagram](./public/icp-governance-agent-diagram.png)
+
 ## Agent details
 
 - **name**: ICP-Governance-agent
